@@ -167,9 +167,13 @@ pbsnbd_open (int readonly)
     return h;
 }
 
-
 static int
 pbsnbd_get_ready (void) {
+    return 0;
+}
+
+static int
+pbsnbd_after_fork (void) {
     char *pbs_error = NULL;
     const char *snapshot = proxmox_backup_snapshot_string("vm", vmid, backup_time, &pbs_error);
 
@@ -239,6 +243,7 @@ static struct nbdkit_plugin plugin = {
   .get_size          = pbsnbd_get_size,
   .pread             = pbsnbd_pread,
   .get_ready         = pbsnbd_get_ready,
+  .after_fork        = pbsnbd_after_fork,
   .errno_is_preserved = 1,
 };
 
