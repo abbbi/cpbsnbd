@@ -170,12 +170,13 @@ static int pbsnbd_after_fork(void) {
     return -1;
   }
 
-  pbs = proxmox_restore_new(repo, snapshot, password, NULL, NULL, fingerprint,
-                            &pbs_error);
+  pbs = proxmox_restore_new_ns(repo, snapshot, namespace, password, NULL, NULL,
+                               fingerprint, &pbs_error);
 
-  fprintf(stderr, "Connecting PBS: [%s]\n", repo);
+  fprintf(stderr, "Connecting PBS: [%s] Namespace: [%s]\n", repo,
+          namespace ? namespace : "");
   if (proxmox_restore_connect(pbs, &pbs_error) < 0) {
-    nbdkit_error("proxmox_restore_connect failed - %s\n", pbs_error);
+    nbdkit_error("Unable to serve image: [%s]\n", pbs_error);
     proxmox_backup_free_error(pbs_error);
     return -1;
   }
