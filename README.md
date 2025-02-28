@@ -84,7 +84,8 @@ Access via regular nbd capable tools such as qemu-img:
 ```
  sudo apt-get install nbdkit-plugin-dev \
     libproxmox-backup-qemu0 \               # part of pve no-subscription repositories
-    libproxmox-backup-qemu0-dev
+    libproxmox-backup-qemu0-dev \
+    build-essential
  make
 ```
 
