@@ -131,7 +131,12 @@ pbsnbd_config_complete (void)
 }
 
 #define pbsnbd_config_help \
-  "repo=<REPO>     (required) The PBS repository string to connect."
+  "repo=<REPO>                  (required) The PBS repository string to connect.\n" \
+  "password=<PASSWORD>          (required) The PBS password.\n" \
+  "fingerprint=<FINGERPRINT>    (required) The PBS ssl fingerprint.\n" \
+  "vmid=<VMID>                  (required) The Backup ID to map\n" \
+  "timestamp=<TIMESTAMP>        (required) The Backup time to map\n" \
+  "image=<IMAGE>                (required) The Backup image to map.\n"
 
 struct pbsnbd_handle {
     int devid;
