@@ -145,7 +145,7 @@ static void *pbsnbd_open(int readonly) {
     return NULL;
   }
 
-  fprintf(stderr, "Opening image [%s]\n", image_name);
+  fprintf(stderr, "Opening image [%s/%s/%s]\n", vmid, timestamp, image_name);
   h->devid = proxmox_restore_open_image(pbs, image_name, &pbs_error);
   if (h->devid < 0) {
     nbdkit_error("proxmox_restore_open_image failed - %s\n", pbs_error);
@@ -217,7 +217,7 @@ static int pbsnbd_pread(void *handle, void *buf, uint32_t count,
 
 static struct nbdkit_plugin plugin = {
     .name = "pbsnbd",
-    .version = "0.2",
+    .version = "0.3",
     .unload = pbsnbd_unload,
     .config = pbsnbd_config,
     .config_complete = pbsnbd_config_complete,

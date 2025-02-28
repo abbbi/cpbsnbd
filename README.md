@@ -14,11 +14,9 @@ To start an export, pass the plugin to nbdkit with required arguments:
     password=test \
     namespace=                                  # namespace, optional
 
-    pbsnbd Plugin loaded
-    Connecting PBS: [root@pam@192.168.161.241:test] Namespace: []
-    Connected to PBS version: [1.4.1 (UNKNOWN)]
-    Attempt to open image [vm/103/2025-02-25T15:48:38Z/drive-scsi0.img]
-    Successfully opened image [vm/103/2025-02-25T15:48:38Z/drive-scsi0.img]
+    Connecting PBS: [root@pam@192.168.161.241:test]
+    Connected via library version: [1.4.1 (UNKNOWN)] Default chunk size: [4194304]
+    Opening image [103/2025-02-25T15:48:38Z/drive-scsi0.img.fidx]
 ```
 
 The NBD device is by default reachable via localhost. The COW Filter (--filter
