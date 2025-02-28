@@ -31,7 +31,7 @@ ProxmoxRestoreHandle *pbs;
 static void
 pbsnbd_unload (void)
 {
-  //free (filename);
+    free(pbs);
 }
 
 static int
@@ -79,13 +79,12 @@ pbsnbd_config (const char *key, const char *value)
 }
 
 time_t my_timegm(struct tm *tm) {
-    time_t local = mktime(tm);  // Convert to local time
-    struct tm *gmt = gmtime(&local);  // Convert back to UTC
+    time_t local = mktime(tm); 
+    struct tm *gmt = gmtime(&local);
 
-    return local + (local - mktime(gmt));  // Adjust offset
+    return local + (local - mktime(gmt));
 }
 
-/* Check the user did pass a file=<FILENAME> parameter. */
 static int
 pbsnbd_config_complete (void)
 {
@@ -134,27 +133,43 @@ pbsnbd_config_complete (void)
 #define pbsnbd_config_help \
   "repo=<REPO>     (required) The PBS repository string to connect."
 
-/* The per-connection handle. */
 struct pbsnbd_handle {
     int devid;
 };
 
-/* Create the per-connection handle.
- *
- * Because this plugin can only serve readonly, we can ignore the
- * 'readonly' parameter.
- */
+
 static void *
 pbsnbd_open (int readonly)
 {
+    char *pbs_error = NULL;
 
+    int size = snprintf(NULL, 0, "%s%s", image, ".fidx") + 1;
+    char *image_name = malloc(size);
+    snprintf(image_name, size, "%s%s", image, ".fidx");
+
+    struct pbsnbd_handle *h;
+    h = malloc (sizeof *h);
+    if (h == NULL) {
+        nbdkit_error ("malloc: %m");
+        free(image_name);
+        return NULL;
+    }
+
+    fprintf(stderr, "Opening image [%s]\n", image_name);
+    h->devid = proxmox_restore_open_image(pbs, image_name, &pbs_error);
+    if (h->devid < 0) {
+        nbdkit_error("proxmox_restore_open_image failed - %s\n", pbs_error);
+        proxmox_backup_free_error(pbs_error);
+        free(h);
+        return NULL;
+    }
+
+    return h;
 }
 
 
 static int
 pbsnbd_get_ready (void) {
-
-    struct pbsnbd_handle *h;
     char *pbs_error = NULL;
     const char *snapshot = proxmox_backup_snapshot_string("vm", vmid, backup_time, &pbs_error);
 
@@ -164,36 +179,17 @@ pbsnbd_get_ready (void) {
         return -1;
     }
 
-    h = malloc (sizeof *h);
-    if (h == NULL) {
-        nbdkit_error ("malloc: %m");
-        return -1;
-    }
-
     pbs = proxmox_restore_new (repo, snapshot, password, NULL, NULL, fingerprint, &pbs_error);
 
-    fprintf(stderr, "connecting\n");
-
+    fprintf(stderr, "Connecting PBS: [%s]\n", repo);
     if (proxmox_restore_connect(pbs, &pbs_error) < 0) {
         nbdkit_error( "proxmox_restore_connect failed - %s\n", pbs_error);
         proxmox_backup_free_error(pbs_error);
-        free(h);
         return -1;
     }
 
-    int size = snprintf(NULL, 0, "%s%s", image, ".fidx") + 1;
-    char *image_name = malloc(size);
-    snprintf(image_name, size, "%s%s", image, ".fidx");
-    h->devid = proxmox_restore_open_image(pbs, image_name, &pbs_error);
-    if (h->devid < 0) {
-        nbdkit_error("proxmox_restore_open_image failed - %s\n", pbs_error);
-        proxmox_backup_free_error(pbs_error);
-        free(h);
-        return -1;
-    }
-
-    fprintf(stderr, "Image opened\n");
-    free(h);
+    fprintf(stderr, "Connected via library version: [%s] Default chunk size: [%d]\n", 
+            proxmox_backup_qemu_version(), PROXMOX_BACKUP_DEFAULT_CHUNK_SIZE);
 
     return 0;
 }
@@ -201,30 +197,34 @@ pbsnbd_get_ready (void) {
 static void
 pbsnbd_close (void *handle)
 {
+    struct pbsnbd_handle *h = handle;
+    free(h);
 }
 
 #define THREAD_MODEL NBDKIT_THREAD_MODEL_PARALLEL
 
-/* Get the file size. */
 static int64_t
 pbsnbd_get_size (void *handle)
 {
-    return 0;
+    struct pbsnbd_handle *h = handle;
+    char *pbs_error = NULL;
+    long length = proxmox_restore_get_image_length(pbs, h->devid, &pbs_error);
+    int64_t size = (int64_t)length;
+
+    return size;
 }
 
 static int
 pbsnbd_pread (void *handle, void *buf, uint32_t count, uint64_t offset,
                 uint32_t flags)
 {
-  struct pbsnbd_handle *h = handle;
-  char *pbs_error = NULL;
-
-  int read = proxmox_restore_read_image_at(pbs, h->devid, buf, offset, sizeof(buf), &pbs_error);
-  if ( read < 0 ) {
-    nbdkit_error("short read: %s", pbs_error);
-  }
-
-  return read;
+    struct pbsnbd_handle *h = handle;
+    char *pbs_error = NULL;
+    int done = proxmox_restore_read_image_at(pbs, h->devid, buf, offset, count, &pbs_error);
+    if (done != count) {
+        nbdkit_error ("pread: failed: %s", pbs_error);
+    }
+    return 0;
 }
 
 static struct nbdkit_plugin plugin = {
@@ -239,9 +239,6 @@ static struct nbdkit_plugin plugin = {
   .get_size          = pbsnbd_get_size,
   .pread             = pbsnbd_pread,
   .get_ready         = pbsnbd_get_ready,
-  /* In this plugin, errno is preserved properly along error return
-   * paths from failed system calls.
-   */
   .errno_is_preserved = 1,
 };
 
