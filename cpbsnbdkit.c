@@ -223,7 +223,7 @@ static int pbsnbd_pread(void *handle, void *buf, uint32_t count,
 
 static struct nbdkit_plugin plugin = {
     .name = "pbsnbd",
-    .version = "0.5",
+    .version = "0.6",
     .unload = pbsnbd_unload,
     .config = pbsnbd_config,
     .config_complete = pbsnbd_config_complete,

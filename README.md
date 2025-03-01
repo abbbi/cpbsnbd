@@ -79,6 +79,8 @@ Access via regular nbd capable tools such as qemu-img:
 
 # building
 
+Regular build:
+
 ```
  sudo apt-get install nbdkit-plugin-dev \
     libproxmox-backup-qemu0 \               # part of pve no-subscription repositories
@@ -86,6 +88,13 @@ Access via regular nbd capable tools such as qemu-img:
     build-essential
  make
 ```
+
+Build using provided Dockerfile (Debian bookworm):
+
+```
+ DOCKER_BUILDKIT=1 docker build --file Dockerfile --output out .
+```
+
 
 # notes
 
