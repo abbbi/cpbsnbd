@@ -99,9 +99,13 @@ static int pbsnbd_config_complete(void) {
     return -1;
   }
   if (password == NULL) {
-    nbdkit_error("you must supply the password=<PASSWORD> parameter "
-                 "after the plugin name on the command line");
-    return -1;
+    password = getenv("PBS_PASSWORD");
+    if (password == NULL) {
+      nbdkit_error("you must supply the password=<PASSWORD> parameter "
+                   "after the plugin name on the command line "
+                   "or export PBS_PASSWORD environment variable.");
+      return -1;
+    }
   }
   if (fingerprint == NULL) {
     nbdkit_error("you must supply the fingerprint=<FINGERPRINT> parameter "
@@ -120,7 +124,8 @@ static int pbsnbd_config_complete(void) {
 #define pbsnbd_config_help                                                     \
   "repo=<REPO>                  (required) The PBS repository string to "      \
   "connect.\n"                                                                 \
-  "password=<PASSWORD>          (required) The PBS password.\n"                \
+  "password=<PASSWORD>          (required) The PBS password (or use "          \
+  "PBS_PASSWORD env).\n"                                                       \
   "fingerprint=<FINGERPRINT>    (required) The PBS ssl fingerprint.\n"         \
   "vmid=<VMID>                  (required) The Backup ID to map\n"             \
   "timestamp=<TIMESTAMP>        (required) The Backup time to map\n"           \
