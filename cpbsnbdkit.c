@@ -122,14 +122,15 @@ static int pbsnbd_config_complete(void) {
 }
 
 #define pbsnbd_config_help                                                     \
-  "repo=<REPO>                  (required) The PBS repository string to "      \
+  "repo=<REPO>                  (required) PBS repository string to "          \
   "connect.\n"                                                                 \
-  "password=<PASSWORD>          (required) The PBS password (or use "          \
+  "password=<PASSWORD>          (required) PBS password (or use "              \
   "PBS_PASSWORD env).\n"                                                       \
-  "fingerprint=<FINGERPRINT>    (required) The PBS ssl fingerprint.\n"         \
-  "vmid=<VMID>                  (required) The Backup ID to map\n"             \
-  "timestamp=<TIMESTAMP>        (required) The Backup time to map\n"           \
-  "image=<IMAGE>                (required) The Backup image to map.\n"
+  "namespace=<NAMESPACE>        (optional) PBS Namespace.\n"                   \
+  "fingerprint=<FINGERPRINT>    (required) PBS ssl fingerprint.\n"             \
+  "vmid=<VMID>                  (required) Backup ID to map.\n"                \
+  "timestamp=<TIMESTAMP>        (required) Backup time to map.\n"              \
+  "image=<IMAGE>                (required) Backup image to map.\n"
 
 struct pbsnbd_handle {
   int devid;
@@ -223,7 +224,7 @@ static int pbsnbd_pread(void *handle, void *buf, uint32_t count,
 
 static struct nbdkit_plugin plugin = {
     .name = "pbsnbd",
-    .version = "0.6",
+    .version = "0.7",
     .unload = pbsnbd_unload,
     .config = pbsnbd_config,
     .config_complete = pbsnbd_config_complete,
