@@ -89,7 +89,7 @@ Regular build:
  make
 ```
 
-Build using provided Dockerfile (Debian bookworm):
+Build using provided Dockerfile (Debian trixie):
 
 ```
  DOCKER_BUILDKIT=1 docker build --file Dockerfile --output out .
